@@ -923,17 +923,19 @@ bool OBS_service::startStreaming(void)
 	outdated_driver_error::instance()->set_active(false);
 	if (!isStreaming) {
 		SignalInfo  signal = SignalInfo("streaming", "stop");
-		const char* error  = obs_output_get_last_error(streamingOutput);
-		if (error) {
-			std::string outdated_driver_error = outdated_driver_error::instance()->get_error(error);
-			if (outdated_driver_error.size() != 0) {
-				signal.setErrorMessage(outdated_driver_error);
-			} else {
+		std::string outdated_driver_error = outdated_driver_error::instance()->get_error();
+		if (outdated_driver_error.size() != 0) {
+			signal.setErrorMessage(outdated_driver_error);
+			signal.setCode(OBS_OUTPUT_OUTDATED_DRIVER);
+		} else {
+			const char* error = obs_output_get_last_error(streamingOutput);
+			if (error) {
 				signal.setErrorMessage(error);
+				blog(LOG_INFO, "Last streaming error: %s", error);
 			}
-			blog(LOG_INFO, "Last streaming error: %s", error);
+			signal.setCode(OBS_OUTPUT_ERROR);
 		}
-		signal.setCode(OBS_OUTPUT_ERROR);
+
 		std::unique_lock<std::mutex> ulock(signalMutex);
 		outputSignal.push(signal);
 	}
@@ -1150,17 +1152,18 @@ bool OBS_service::startRecording(void)
 	outdated_driver_error::instance()->set_active(false);
 	if (!isRecording) {
 		SignalInfo signal = SignalInfo("recording", "stop");
-		const char* error = obs_output_get_last_error(recordingOutput);
-		if (error) {
-			std::string outdated_driver_error = outdated_driver_error::instance()->get_error(error);
-			if (outdated_driver_error.size() != 0) {
-				signal.setErrorMessage(outdated_driver_error);
-			} else {
+		std::string outdated_driver_error = outdated_driver_error::instance()->get_error();
+		if (outdated_driver_error.size() != 0) {
+			signal.setErrorMessage(outdated_driver_error);
+			signal.setCode(OBS_OUTPUT_OUTDATED_DRIVER);
+		} else {
+			const char* error = obs_output_get_last_error(recordingOutput);
+			if (error) {
 				signal.setErrorMessage(error);
+				blog(LOG_INFO, "Last recording error: %s", error);
 			}
-			std::cout << "Last recording error: " << error << std::endl;
+			signal.setCode(OBS_OUTPUT_ERROR);
 		}
-		signal.setCode(OBS_OUTPUT_ERROR);
 		std::unique_lock<std::mutex> ulock(signalMutex);
 		outputSignal.push(signal);
 	}
@@ -1322,17 +1325,18 @@ bool OBS_service::startReplayBuffer(void)
 		isReplayBufferActive = false;
 		rpUsesRec            = false;
 		rpUsesStream         = false;
-		const char* error    = obs_output_get_last_error(replayBufferOutput);
-		if (error) {
-			std::string outdated_driver_error = outdated_driver_error::instance()->get_error(error);
-			if (outdated_driver_error.size() != 0) {
-				signal.setErrorMessage(outdated_driver_error);
-			} else {
+		std::string outdated_driver_error = outdated_driver_error::instance()->get_error();
+		if (outdated_driver_error.size() != 0) {
+			signal.setErrorMessage(outdated_driver_error);
+			signal.setCode(OBS_OUTPUT_OUTDATED_DRIVER);
+		} else {
+			const char* error = obs_output_get_last_error(replayBufferOutput);
+			if (error) {
 				signal.setErrorMessage(error);
+				blog(LOG_INFO, "Last replay buffer error: %s", error);
 			}
-			std::cout << "Last replay buffer error: " << error << std::endl;
+			signal.setCode(OBS_OUTPUT_ERROR);
 		}
-		signal.setCode(OBS_OUTPUT_ERROR);
 		std::unique_lock<std::mutex> ulock(signalMutex);
 		outputSignal.push(signal);
 	} else {
